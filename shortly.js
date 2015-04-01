@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var crypto = require('crypto');
 
 
 var db = require('./app/config');
@@ -39,6 +40,78 @@ function(req, res) {
     res.send(200, links.models);
   });
 });
+
+app.get('/login', 
+function(req, res) {
+  res.render('login');
+});
+
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
+//~~~~~~~~~~~
+
+app.post('/login', 
+function(req, res) {
+  console.log(req.body)
+  // var uri = req.body.url;
+
+  // if (!util.isValidUrl(uri)) {
+  //   console.log('Not a valid url: ', uri);
+  //   return res.send(404);
+  // }
+
+  // new Link({ url: uri }).fetch().then(function(found) {
+  //   if (found) {
+  //     res.send(200, found.attributes);
+  //   } else {
+  //     util.getUrlTitle(uri, function(err, title) {
+  //       if (err) {
+  //         console.log('Error reading URL heading: ', err);
+  //         return res.send(404);
+  //       }
+
+  //       var link = new Link({
+  //         url: uri,
+  //         title: title,
+  //         base_url: req.headers.origin
+  //       });
+
+  //       link.save().then(function(newLink) {
+  //         Links.add(newLink);
+  //         res.send(200, newLink);
+  //       });
+  //     });
+  //   }
+  // });
+});
+
+app.post('/signup', 
+function(req, res) {
+  new User({username : req.body.username })
+    .fetch()
+    .then(function(found) {
+      if (found) {
+        res.send(200, found.attributes);
+      } else {
+        var user = new User({
+          username : req.body.username,
+          password : req.body.password
+        });
+        user.save().then(function(newUser){
+          // console.log("THIS IS THE NEW USER:", newUser)
+          Users.add(newUser);
+          res.send(200, newUser);
+        })
+      }
+    })
+});
+
+//~~~~~~~~~~
+
+
 
 app.post('/links', 
 function(req, res) {
@@ -85,6 +158,8 @@ function(req, res) {
 // assume the route is a short code and try and handle it here.
 // If the short-code doesn't exist, send the user to '/'
 /************************************************************/
+
+//this is where the login and signup stuff goes
 
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
