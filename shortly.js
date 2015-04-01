@@ -13,6 +13,7 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+// var salt = bcrypt.genSaltSync(10)//, function(err, salt) {
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -52,40 +53,28 @@ function(req, res) {
 });
 
 //~~~~~~~~~~~
+// var salt = bcrypt.genSaltSync(10)//, function(err, salt) {
 
 app.post('/login', 
 function(req, res) {
-  console.log(req.body)
-  // var uri = req.body.url;
+  new User({username : req.body.username })
+    .fetch()
+    .then(function(model) {
+      if (model) {
+        //compare entered password to stored password hash
+        console.log('password ',model.get('password'))
+        console.log('username ',model.get('username'))
+        res.send(200, found.attributes);
+        //login
 
-  // if (!util.isValidUrl(uri)) {
-  //   console.log('Not a valid url: ', uri);
-  //   return res.send(404);
-  // }
+      } else {
+        //redirect to signup
+        res.redirect('/signup')
+        
+      }
+    })
 
-  // new Link({ url: uri }).fetch().then(function(found) {
-  //   if (found) {
-  //     res.send(200, found.attributes);
-  //   } else {
-  //     util.getUrlTitle(uri, function(err, title) {
-  //       if (err) {
-  //         console.log('Error reading URL heading: ', err);
-  //         return res.send(404);
-  //       }
 
-  //       var link = new Link({
-  //         url: uri,
-  //         title: title,
-  //         base_url: req.headers.origin
-  //       });
-
-  //       link.save().then(function(newLink) {
-  //         Links.add(newLink);
-  //         res.send(200, newLink);
-  //       });
-  //     });
-  //   }
-  // });
 });
 
 app.post('/signup', 
@@ -94,23 +83,21 @@ function(req, res) {
     .fetch()
     .then(function(found) {
       if (found) {
-        res.send(200, found.attributes);
+        res.redirect('/login')
       } else {
         var user = new User({
           username : req.body.username,
-          password : req.body.password
+          password : req.body.password,
         });
         user.save().then(function(newUser){
-          // console.log("THIS IS THE NEW USER:", newUser)
           Users.add(newUser);
-          res.send(200, newUser);
+          res.redirect('/login')
         })
       }
     })
 });
 
 //~~~~~~~~~~
-
 
 
 app.post('/links', 

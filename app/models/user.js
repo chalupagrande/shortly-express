@@ -8,13 +8,13 @@ var User = db.Model.extend({
 
   initialize : function(){
     this.on('creating', function(model, attrs, options){
-      // var salt = "booger";
-      console.log('unhashed password is ',model.get('password'))
-      
-      var salt = bcrypt.genSaltSync(10)//, function(err, salt) {
-        var newStuff = bcrypt.hashSync(model.get('password'), salt);
-        model.set('password', newStuff);
-        console.log('new password is ',model.get('password'))
+      var salt = '$2a$10$BVbonrqUej2PlzLYfXiGju';
+      var newStuff = bcrypt.hashSync(model.get('password'), salt);
+      model.set('password', newStuff);
+      console.log('new password is ',model.get('password'))
+        
+        //ASYNCH CODE 
+
         // , function() {}, function(err, hash) {
         //   console.log('hash is ',hash)
         //   model.set('password', hash)
@@ -30,8 +30,6 @@ var User = db.Model.extend({
         
       // });
     })
-
-
   }
 
   //put in database
