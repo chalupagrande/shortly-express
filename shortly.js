@@ -47,18 +47,43 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', 
 function(req, res) {
-  var cookie = cookieParser(req.headers.cookie);
-  console.log(cookie['shortly_token']);
-  res.render('index');
+  console.log('test')
+  if (req.headers.cookie === undefined) {
+    res.redirect('/login')
+  } else {
+      console.log('orig is ',req.headers.cookie);
+      var cookie = cookieParser(req.headers.cookie);
+      console.log('cookie is ',cookie)
+      // if (!cookie) {
+      //   res.redirect('/login')
+      // }
+      console.log('token is ',cookie['shortly_token']);
+      new Session({session_id : cookie['shortly_token']})
+        .fetch()
+        .then(function(sess) {
+          console.log(sess)
+          if (!sess) {
+            res.redirect('/login')
+          } else {
+            res.render('index');
+          }
+        })
+    }
 });
 
 app.get('/create', 
 function(req, res) {
+  if (!req.headers.cookie) {
+    res.redirect('/login')
+  }
   res.render('index');
 });
 
 app.get('/links', 
 function(req, res) {
+  if (req.headers.cookie === undefined) {
+    res.redirect('/login')
+  }
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
@@ -100,19 +125,18 @@ function(req, res) {
           session.save().then(
             console.log("I didnt break.... ")
           )
-
-
           res.redirect('/');
           
 
         }else{
           console.log(" Your password were incorrect.")
+          res.redirect('/login')
         }
 
       } else {
         //redirect to signup
         console.log(" Your username was not found.")
-        res.redirect('/signup')
+        res.redirect('/login')
         
       }
     })
@@ -127,7 +151,7 @@ function(req, res) {
     .then(function(found) {
       if (found) {
         console.log("Your username is taken. Choose another")
-        res.redirect('/login')
+        res.redirect('/signup')
       } else {
         var user = new User({
           username : req.body.username,
@@ -135,10 +159,14 @@ function(req, res) {
         });
         user.save().then(function(newUser){
           Users.add(newUser);
-          res.redirect('/login')
+          res.redirect('/')
         })
       }
     })
+});
+
+app.get('/logout', function(){
+
 });
 
 //~~~~~~~~~~

@@ -149,7 +149,7 @@ describe('', function() {
 
     }); // 'Shortening links'
 
-    describe('With previously saved urls:', function(){
+    xdescribe('With previously saved urls:', function(){
 
       var link;
 
@@ -163,10 +163,11 @@ describe('', function() {
         });
         link.save().then(function(){
           done();
+          console.log('link', link)
         });
       });
 
-      xit('Returns the same shortened code', function(done) {
+      it('Returns the same shortened code', function(done) {
         var options = {
           'method': 'POST',
           'followAllRedirects': true,
