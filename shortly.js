@@ -27,6 +27,8 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', 
 function(req, res) {
+  console.log(req.headers.cookie)
+  debugger;
   res.render('index');
 });
 
@@ -57,18 +59,28 @@ function(req, res) {
 
 app.post('/login', 
 function(req, res) {
-  new User({username : req.body.username })
+  new User({username : req.body.username})
     .fetch()
     .then(function(model) {
       if (model) {
+        var pass = model.hashPassword(req);
         //compare entered password to stored password hash
-        console.log('password ',model.get('password'))
-        console.log('username ',model.get('username'))
-        res.send(200, found.attributes);
-        //login
+        console.log("pass from req :", pass);
+        console.log("pass from db :", model.get('password'))
+        if(model.get('password') === pass){
+          //set their sessions key bullshi
+          res.cookie('shortly_token', 'sometestvalue');
+          res.cookie('second_cookie', 'othervalue');
+          // actually log them in
+
+          res.redirect('/');
+        }else{
+          console.log(" Your password were incorrect.")
+        }
 
       } else {
         //redirect to signup
+        console.log(" Your username was not found.")
         res.redirect('/signup')
         
       }
@@ -79,10 +91,11 @@ function(req, res) {
 
 app.post('/signup', 
 function(req, res) {
-  new User({username : req.body.username })
+  new User({username : req.body.username})
     .fetch()
     .then(function(found) {
       if (found) {
+        console.log("Your username is taken. Choose another")
         res.redirect('/login')
       } else {
         var user = new User({

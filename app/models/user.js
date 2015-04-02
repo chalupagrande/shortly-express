@@ -6,10 +6,17 @@ var User = db.Model.extend({
   tableName: 'users',
   hasTimestamps: true,
 
+  salt : '$2a$10$BVbonrqUej2PlzLYfXiGju',
+
+  hashPassword : function(req){   
+    var curPass = req.body.password;
+    var hashedp = bcrypt.hashSync(curPass, this.salt);
+    return hashedp
+  },
+  
   initialize : function(){
     this.on('creating', function(model, attrs, options){
-      var salt = '$2a$10$BVbonrqUej2PlzLYfXiGju';
-      var newStuff = bcrypt.hashSync(model.get('password'), salt);
+      var newStuff = bcrypt.hashSync(model.get('password'), this.salt);  // <---- check this
       model.set('password', newStuff);
       console.log('new password is ',model.get('password'))
         
