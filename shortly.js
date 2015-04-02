@@ -3,6 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var crypto = require('crypto');
+var bcrypt = require('bcrypt-nodejs');
 
 
 var db = require('./app/config');
@@ -11,9 +12,28 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var Session = require('./app/models/session.js');
 
 var app = express();
+// app.use(cookieParser())
 // var salt = bcrypt.genSaltSync(10)//, function(err, salt) {
+
+var cookieParser = function(string){
+  var cookies = string.split("; ");
+  var obj = {}
+  for(var i = 0; i < cookies.length; i++){
+    cookies[i]= cookies[i].split("=");
+    obj[cookies[i][0]] = cookies[i][1]
+  }
+  return obj;
+}
+
+var createSessionId = function(req){
+  var curPass = req.body.username + req.body.password;
+  var salt = '$2a$10$BVbonrqUej2PlzLYfXiGju';
+  var hashedp = bcrypt.hashSync(curPass, salt);
+  return hashedp
+}
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -27,8 +47,8 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', 
 function(req, res) {
-  console.log(req.headers.cookie)
-  debugger;
+  var cookie = cookieParser(req.headers.cookie);
+  console.log(cookie['shortly_token']);
   res.render('index');
 });
 
@@ -64,16 +84,27 @@ function(req, res) {
     .then(function(model) {
       if (model) {
         var pass = model.hashPassword(req);
-        //compare entered password to stored password hash
-        console.log("pass from req :", pass);
-        console.log("pass from db :", model.get('password'))
+        //their password is correct
         if(model.get('password') === pass){
-          //set their sessions key bullshi
-          res.cookie('shortly_token', 'sometestvalue');
-          res.cookie('second_cookie', 'othervalue');
-          // actually log them in
+          //create session id
+          var session_id = createSessionId(req);
+          // res.clearCookie('second_cookie')
+          res.cookie('shortly_token', session_id);
+          res.cookie('shortly_username', req.body.username);
+
+          var session = new Session ({
+            user_id : req.body.username,
+            session_key : session_id
+          })
+
+          session.save().then(
+            console.log("I didnt break.... ")
+          )
+
 
           res.redirect('/');
+          
+
         }else{
           console.log(" Your password were incorrect.")
         }
