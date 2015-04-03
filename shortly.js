@@ -29,7 +29,9 @@ var cookieParser = function(string){
 }
 
 var createSessionId = function(req){
-  var curPass = req.body.username + req.body.password;
+  var time = new Date().getTime()
+  // console.log(time)
+  var curPass = req.body.username + req.body.password + time;
   var salt = '$2a$10$BVbonrqUej2PlzLYfXiGju';
   var hashedp = bcrypt.hashSync(curPass, salt);
   return hashedp
@@ -47,21 +49,21 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', 
 function(req, res) {
-  console.log('test')
+  // console.log('test')
   if (req.headers.cookie === undefined) {
     res.redirect('/login')
   } else {
-      console.log('orig is ',req.headers.cookie);
+      // console.log('orig is ',req.headers.cookie);
       var cookie = cookieParser(req.headers.cookie);
-      console.log('cookie is ',cookie)
+      // console.log('cookie is ',cookie)
       // if (!cookie) {
       //   res.redirect('/login')
       // }
-      console.log('token is ',cookie['shortly_token']);
-      new Session({session_id : cookie['shortly_token']})
+      // console.log('token is ',cookie['shortly_token']);
+      new Session({session_key : cookie['shortly_token']})
         .fetch()
         .then(function(sess) {
-          console.log(sess)
+          // console.log(sess)
           if (!sess) {
             res.redirect('/login')
           } else {
@@ -69,6 +71,21 @@ function(req, res) {
           }
         })
     }
+});
+
+app.get('/logout', 
+function(req, res) {
+  var cookie = cookieParser(req.headers.cookie);
+   new Session({session_key : cookie['shortly_token'].replace(/%24/g,"$").replace(/%2F/g,"/")})
+        .fetch()
+        .then(function(sess) {
+          if (sess) {
+            console.log('destroyed')
+           sess.destroy(); 
+          }
+        })
+  
+  res.redirect('/');
 });
 
 app.get('/create', 
